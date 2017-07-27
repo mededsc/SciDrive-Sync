@@ -68,8 +68,11 @@ class SciDrivePath:
             print("Using default upload path {0}".format(value))
         self.value = value
 
-    def checkPathExists():
-        print("TODO")
+    def ensureDirExists(self, targetPath):
+        #This throws an error if parent directory does not exist
+        #This also throws an error if directory already exists...
+        print('TODO')
+        #SciDrive.createContainer(targetPath)
 
     def __str__(self):
         return self.value
@@ -78,16 +81,15 @@ class SciDrivePath:
 def uploadSync(payload, target):
 
   if os.path.isfile(str(payload)):
-    SciDrivePath.checkPathExists()
-
-    print('{0}'.format(os.path.join(str(target), os.path.basename(str(payload)))))
+    target.ensureDirExists(str(target))
 
     SciDrive.upload(os.path.join(str(target), os.path.basename(str(payload))), localFilePath=str(payload))
 
 
   elif os.path.isdir(str(payload)):
-    print('TODO')
+    print("TODO")
     exit()
+
   else:
     print('This is supposed to be unreachable code - toUploadPath failed in checking input path')
     exit()
@@ -105,7 +107,7 @@ if __name__ == '__main__':
 
   parser.add_argument('-l', '--localpath', type=ToUploadPath, help='Specify path to file or folder to upload', default=ToUploadPath.DEFAULT)  
 
-  parser.add_argument('-r', '--remotepath', type=SciDrivePath, help='Specify destination path on SciDrive to upload files/folder to', default=SciDrivePath.DEFAULT)  
+  parser.add_argument('-r', '--remotepath', type=SciDrivePath, help='Specify destination folderpath on SciDrive to upload files/folder to', default=SciDrivePath.DEFAULT)  
 
 
   args = parser.parse_args()
