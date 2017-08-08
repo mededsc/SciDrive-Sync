@@ -7,4 +7,9 @@ Requirements:
 
   SciServer Python API: https://github.com/sciserver/SciScript-Python
 
+TODO
+
+ - add option to ignore hidden files/directories
+ - add in status messages like 'uploading file blah'
+
 

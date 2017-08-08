@@ -1,3 +1,4 @@
+
 from SciServer import Authentication, SciDrive
 
 import getpass
@@ -61,7 +62,7 @@ class SciDrivePath:
 
 #TODO verify path, windows/linux compat
 
-    DEFAULT = '/Sync/'
+    DEFAULT = "/Sync/"
 
     def __init__(self, value):
         if value == self.DEFAULT:
@@ -71,12 +72,40 @@ class SciDrivePath:
     def ensureDirExists(self, targetPath):
         #This throws an error if parent directory does not exist
         #This also throws an error if directory already exists...
-        print('TODO')
+        print('TODO ensureDirExists')
         #SciDrive.createContainer(targetPath)
 
     def __str__(self):
         return self.value
 
+
+def recursiveDirSync(payload, target):
+  if os.path.isfile(str(payload)):
+    print('Error: the directory upload function has been called on a file path {0}'.format(payload))
+    exit()
+  
+  elif os.path.isdir(str(payload)):
+    #target.ensureDirExists(str(target))
+    
+    dirpath, dirname, filename = next(os.walk(str(payload)))
+    current = os.path.join(str(target),os.path.basename(dirpath))
+    if len(filename) == 0:
+      # problem: this is the most obvious reason for SciDrive.createContainer to fail
+      # however it could also fail for authentication reasons, connection reasons, etc.
+      # this problem can be solved when ensureDirExists is functional
+      try:
+        SciDrive.createContainer(current)
+      except:
+        print("The folder {0} already exists in SciDrive".format(current))
+    else:
+      for local_file in filename:
+        SciDrive.upload(os.path.join(str(current), local_file), localFilePath=os.path.join(dirpath,local_file))
+    
+    for sub_dir in dirname:
+      recursiveDirSync(os.path.join(dirpath, sub_dir), current)
+  else:
+    print('Input path {0} could not properly be checked'.format(payload))
+    exit()
 
 def uploadSync(payload, target):
 
@@ -84,11 +113,11 @@ def uploadSync(payload, target):
     target.ensureDirExists(str(target))
 
     SciDrive.upload(os.path.join(str(target), os.path.basename(str(payload))), localFilePath=str(payload))
-
+    print("uploading {0} to {1}".format(os.path.join(str(target),os.path.basename(str(payload))),str(target)))
 
   elif os.path.isdir(str(payload)):
-    print("TODO")
-    exit()
+    recursiveDirSync(payload, target)
+    
 
   else:
     print('This is supposed to be unreachable code - toUploadPath failed in checking input path')
@@ -115,7 +144,3 @@ if __name__ == '__main__':
   token1 = Authentication.login(str(args.username), str(args.password))
  
   uploadSync(args.localpath, args.remotepath)
-
- 
-
-
