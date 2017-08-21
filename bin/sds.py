@@ -4,6 +4,7 @@ from SciServer import Authentication, SciDrive
 import getpass
 import argparse
 import os
+import time
 
 class Password:
 
@@ -62,7 +63,7 @@ class SciDrivePath:
 
 #TODO verify path, windows/linux compat
 
-    DEFAULT = "/Sync/"
+    DEFAULT = "/SciDriveSync/"
 
     def __init__(self, value):
         if value == self.DEFAULT:
@@ -94,13 +95,28 @@ def recursiveDirSync(payload, target):
       # however it could also fail for authentication reasons, connection reasons, etc.
       # this problem can be solved when ensureDirExists is functional
       try:
+        print("Creating directory {0} on SciDrive".format(current))
         SciDrive.createContainer(current)
       except:
         print("The folder {0} already exists in SciDrive".format(current))
     else:
       for local_file in filename:
-        SciDrive.upload(os.path.join(str(current), local_file), localFilePath=os.path.join(dirpath,local_file))
-    
+        print("Uploading file {0} to SciDrive:{1}...".format(os.path.join(dirpath,local_file), os.path.join(str(current), local_file)))
+        try:
+          SciDrive.upload(os.path.join(str(current), local_file), localFilePath=os.path.join(dirpath,local_file))
+        except:
+          print("Upload failed, trying again...")
+          time.sleep(2)
+          try:
+            SciDrive.upload(os.path.join(str(current), local_file), localFilePath=os.path.join(dirpath,local_file))
+          except:
+            print("Upload failed twice, trying one more time...")
+            time.sleep(2)
+            try:
+              SciDrive.upload(os.path.join(str(current), local_file), localFilePath=os.path.join(dirpath,local_file))
+            except:
+              print("Upload failed three times.  Exiting...")    
+
     for sub_dir in dirname:
       recursiveDirSync(os.path.join(dirpath, sub_dir), current)
   else:
@@ -110,10 +126,10 @@ def recursiveDirSync(payload, target):
 def uploadSync(payload, target):
 
   if os.path.isfile(str(payload)):
-    target.ensureDirExists(str(target))
+    #target.ensureDirExists(str(target))
 
     SciDrive.upload(os.path.join(str(target), os.path.basename(str(payload))), localFilePath=str(payload))
-    print("uploading {0} to {1}".format(os.path.join(str(target),os.path.basename(str(payload))),str(target)))
+    print("Uploading file {0} to SciDrive:{1}".format(os.path.join(str(target),os.path.basename(str(payload))),str(target)))
 
   elif os.path.isdir(str(payload)):
     recursiveDirSync(payload, target)
